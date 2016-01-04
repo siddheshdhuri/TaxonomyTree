@@ -1,0 +1,14 @@
+Package: TaxonomyTree
+Type: Package
+Title: TaxonomyTree provides functions to manage taxonomy as a tree data
+    structure
+Version: 0.1
+Date: 2015-12-30
+Author: Siddhesh Dhuri
+Maintainer: Siddhesh Dhuri <siddhesh.s.dhuri@gmail.com>
+Description: More about what it does (maybe more than one line)
+License: Open
+LazyData: TRUE
+RoxygenNote: 5.0.1
+Imports:
+    data.tree

@@ -14,7 +14,6 @@
 #' @return updated taxonomy tree
 #'
 #' @export
-#'
 addTerm <- function(taxtree, child, parent=NULL){
 
   if(is.null(parent)){
@@ -28,3 +27,39 @@ addTerm <- function(taxtree, child, parent=NULL){
 
 }
 
+
+#'#################################################################
+#' function to create a list of list from a data.tree that can be
+#' displayed using shinyTree package
+#'
+#' @param taxtree - the taxonomy tree to which word needs to be added
+#'
+#' @return taxonomy as list of lists
+#'
+#' @export
+toShinyTreeList <- function (x)
+{
+  self <- x
+  res <- list()
+
+  if(x$isRoot){
+    l_nameName <- self$name
+    res[l_nameName] <- self$name
+  }
+
+  fields <- self$fields
+  fields <- fields[!is.function(fields) && !is.environment(fields)]
+
+  for (fieldName in fields) res[fieldName] <- self[[fieldName]]
+
+  if (!self$isLeaf) {
+    kids <- lapply(self$children, FUN = function(x) toShinyTreeList(x))
+
+    res <- c(res, kids)
+
+  }else{
+    if(!x$isRoot) res <- self$name
+  }
+
+  return(res)
+}

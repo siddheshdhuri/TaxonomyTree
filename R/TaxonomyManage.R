@@ -14,17 +14,20 @@
 #' @return updated taxonomy tree
 #'
 #' @export
-addTerm <- function(taxtree, child, parent=NULL){
-
-  if(is.null(parent)){
+addTerm <- function(taxtree, child, path=NULL){
+  child <- stringr::str_trim(child)
+  if(is.null(path)){
     taxtree$AddChild(child)
   }else{
-    parent.node <- taxtree$Climb(parent)
+    parent.node <- taxtree
+    for(elem in path){
+      parent.node <- parent.node$Climb(elem)
+    }
     parent.node$AddChild(child)
   }
-
+  
   return(taxtree)
-
+  
 }
 
 
@@ -32,7 +35,7 @@ addTerm <- function(taxtree, child, parent=NULL){
 #' function to create a list of list from a data.tree that can be
 #' displayed using shinyTree package
 #'
-#' @param taxtree - the taxonomy tree to which word needs to be added
+#' @param taxtree - the taxonomy data.tree
 #'
 #' @return taxonomy as list of lists
 #'
@@ -46,11 +49,11 @@ toShinyTreeList <- function (x)
     l_nameName <- self$name
     res[l_nameName] <- self$name
   }
+#
+#   fields <- self$fields
+#   fields <- fields[!is.function(fields) && !is.environment(fields)]
 
-  fields <- self$fields
-  fields <- fields[!is.function(fields) && !is.environment(fields)]
-
-  for (fieldName in fields) res[fieldName] <- self[[fieldName]]
+#  for (fieldName in fields) res[fieldName] <- self[[fieldName]]
 
   if (!self$isLeaf) {
     kids <- lapply(self$children, FUN = function(x) toShinyTreeList(x))
@@ -62,4 +65,111 @@ toShinyTreeList <- function (x)
   }
 
   return(res)
+}
+
+#'###############################################################################################
+#' this functions turns a list prepared for shinyTree package into a json string to be fed directly into treejs.
+#'
+#' @param list of list that constitute the tree structure
+#'
+#' @return string that can be used to directly pain the tree
+#'
+#' @export
+toTreeJSON = function(list){
+  outString = '['
+  for (i in 1:length(list)){
+    outString %<>% paste0("{'text' : '",  names(list)[i], "'")
+    attribs = attributes(list[[i]])
+
+    stateAttribs = attribs[grepl('opened|disabled|selected',names(attribs))]
+    children = attribs[grepl('names',names(attribs))]
+    others = attribs[!grepl('opened|disabled|selected|names',names(attribs))]
+
+    if (length(stateAttribs) >0){
+      outString %<>% paste0(", 'state' : {")
+      for (j in 1:length(stateAttribs)){
+        outString %<>% paste0("'",gsub('st','',names(stateAttribs)[j]),"' : ", tolower(stateAttribs[j]))
+        if (j < length(stateAttribs)){
+          outString %<>% paste0(",")
+        }
+      }
+      outString %<>% paste('}')
+    }
+
+    if(length(others)>0){
+      for (j in 1:length(others)){
+        outString %<>% paste0( ", '",gsub('st','',names(others)[j]),"' : '", others[j],"'")
+      }
+    }
+
+    if (class(list[[i]]) == 'list'){
+      outString %<>% paste0(", 'children' : ",toTreeJSON(list[[i]]))
+    }
+
+    outString %<>% paste0("}")
+    if (i < length(list)){
+      outString %<>% paste0(",")
+    }
+
+  }
+  outString %<>% paste0(']')
+
+  return(outString)
+
+}
+
+
+
+#'#################################################################
+#' function to create a data.tree from a list of list that can be
+#' used for data.tree operations
+#'
+#' @param x taxonomy as list of lists
+#'
+#' @return data.tree
+#'
+#' @export
+fromShinyTreeList <- function (x){
+
+  #fist item of list is the root node
+  root.node <- Node$new(x[[1]])
+
+  # other items are branches which will be used to grow the tree
+  tree.list <- x[-1]
+
+  #recursive function to grow rest of the tree from the tree.list
+  growTree <- function(node){
+
+    parent.name <- names(node)
+
+    parent.node <- Node$new(parent.name)
+
+    #if the current node's value is a list then it has children
+    # we need to create subtree for the children
+    if(is.list(node[[1]])){
+
+      sub.parent <- node[[1]]
+      children.names <- names(sub.parent)
+
+      for(child in children.names){
+
+        sub.tree <- growTree(sub.parent[child])
+
+        parent.node$AddChildNode(sub.tree)
+      }
+    }
+
+    return(parent.node)
+
+  }
+
+
+  #running loop for every branch to grow the tree.
+  for(i in 1:length(tree.list)){
+    sub.tree <- growTree(tree.list[i])
+    root.node$AddChildNode(sub.tree)
+  }
+
+  return(root.node)
+
 }

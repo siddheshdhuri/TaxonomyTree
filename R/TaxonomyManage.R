@@ -25,9 +25,9 @@ addTerm <- function(taxtree, child, path=NULL){
     }
     parent.node$AddChild(child)
   }
-  
+
   return(taxtree)
-  
+
 }
 
 
@@ -132,7 +132,7 @@ toTreeJSON = function(list){
 fromShinyTreeList <- function (x){
 
   #fist item of list is the root node
-  root.node <- Node$new(x[[1]])
+  root.node <- Node$new(names(x[1]))
 
   # other items are branches which will be used to grow the tree
   tree.list <- x[-1]
@@ -171,5 +171,36 @@ fromShinyTreeList <- function (x){
   }
 
   return(root.node)
+
+}
+
+
+#'#############################################################################################
+#' Function to compute frequency for all terms
+#'
+#' @param treedf tree as a data frame with column pathString
+#' @param the text corpus in which to look for term
+#'
+#' @return data.frame with updated frequencies
+#'
+#' @export
+computeFrequency <- function(treedf, corpus){
+
+  term.count <- unlist(lapply(treedf$pathString, function(x) {
+                                                      term <- tail(unlist(strsplit(x,"/")),1)
+
+                                                      tocount <- paste0("\\b",term,"\\b")
+
+                                                      count <- stringr::str_count(corpus,stringr::regex(tocount,ignore_case = TRUE))
+
+                                                      return(count)
+
+                                                      }
+                      )
+                )
+
+  treedf$freq <- term.count
+
+  return(treedf)
 
 }

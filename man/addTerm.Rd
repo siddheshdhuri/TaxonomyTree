@@ -8,7 +8,7 @@ This file has funtions for managing taxonomy in a tree structure
 #################################################################
 function to add a word to the taxonomy}
 \usage{
-addTerm(taxtree, child, parent = NULL)
+addTerm(taxtree, child, path = NULL)
 }
 \arguments{
 \item{taxtree}{- the taxonomy tree to which word needs to be added}

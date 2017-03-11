@@ -40,12 +40,12 @@ addTerm <- function(taxtree, child, path=NULL){
 #' @return taxonomy as list of lists
 #'
 #' @export
-toShinyTreeList <- function (x)
+toShinyTreeList <- function (taxtree)
 {
-  self <- x
+  self <- taxtree
   res <- list()
 
-  if(x$isRoot){
+  if(taxtree$isRoot){
     l_nameName <- self$name
     res[l_nameName] <- self$name
   }
@@ -61,7 +61,7 @@ toShinyTreeList <- function (x)
     res <- c(res, kids)
 
   }else{
-    if(!x$isRoot) res <- self$name
+    if(!taxtree$isRoot) res <- self$name
   }
 
   return(res)
@@ -202,5 +202,42 @@ computeFrequency <- function(treedf, corpus){
   treedf$freq <- term.count
 
   return(treedf)
+
+}
+
+
+
+#'#################################################################
+#' function to get all children of selected nodes
+#'
+#' @param taxtree - the taxonomy tree
+#' @param selected.nodes vector of selected tree nodes
+#'
+#' @return list of all node and its children
+#'
+#' @export
+getSelectedNodeChildren <- function(taxtree, selected.nodes){
+
+  selected.paths <- list()
+
+  for(leaf in selected.nodes) {
+    #' get ancestors of the selected node of shinyTree
+    ancestors <- attr(leaf, "ancestry")
+    
+    selected.path <- c(ancestors,leaf)
+
+    #' climb the tree to the selected node
+    parent.node <- taxtree
+    for(elem in selected.path){
+      parent.node <- parent.node$Climb(elem)
+    }
+  
+    #' get leaf children of node
+    leaves <- as.character(parent.node$Get('name'))
+
+    selected.paths[[leaf]] <- leaves
+  }
+
+  return(selected.paths)
 
 }

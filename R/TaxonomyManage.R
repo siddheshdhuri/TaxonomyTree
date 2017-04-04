@@ -16,7 +16,8 @@
 #' @export
 addTerm <- function(taxtree, child, path=NULL){
   child <- stringr::str_trim(child)
-  if(is.null(path)){
+  #'check if path is NULL or same as root name
+  if(is.null(path) || path == taxtree$name){
     taxtree$AddChild(child)
   }else{
     parent.node <- taxtree
@@ -223,7 +224,7 @@ getSelectedNodeChildren <- function(taxtree, selected.nodes){
   for(leaf in selected.nodes) {
     #' get ancestors of the selected node of shinyTree
     ancestors <- attr(leaf, "ancestry")
-    
+
     selected.path <- c(ancestors,leaf)
 
     #' climb the tree to the selected node
@@ -231,7 +232,7 @@ getSelectedNodeChildren <- function(taxtree, selected.nodes){
     for(elem in selected.path){
       parent.node <- parent.node$Climb(elem)
     }
-  
+
     #' get leaf children of node
     leaves <- as.character(parent.node$Get('name'))
 
